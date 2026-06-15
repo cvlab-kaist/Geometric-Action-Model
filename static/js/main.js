@@ -350,23 +350,35 @@
       { key: "goal", label: "LIBERO-Goal" },
       { key: "long", label: "LIBERO-Long" },
     ];
+    const CAMERA_SUCCESS = {
+      spatial: [99, 96, 90, 73, 92],
+      object: [100, 100, 100, 99, 78],
+      goal: [97, 100, 94, 87, 92],
+      long: [100, 96, 68, 77, 43],
+    };
     const cap = (s) => s[0].toUpperCase() + s.slice(1);
     const GROUPS = [
       {
-        title: "Nominal LIBERO",
-        desc: "Unperturbed evaluation episodes, executed fully open-loop.",
+        title: "LIBERO Original",
+        desc: "Original benchmark episodes with the full external and wrist camera views.",
         items: ["task0", "task4", "task8"].map((k) => ({ key: k, label: "Task " + k.slice(4) })),
       },
       {
-        title: "LIBERO-Plus perturbations",
-        desc: "The same policy, zero-shot, under each perturbation factor.",
+        title: "LIBERO-Plus Perturbations",
+        desc: "Zero-shot rollouts under each perturbation factor, shown with the original two-view layout.",
         items: ["camera", "robot", "language", "light", "background", "noise", "layout"]
           .map((k) => ({ key: k, label: cap(k) })),
       },
       {
-        title: "Camera difficulty sweep",
-        desc: "Camera perturbation intensity rising from L1 (easiest) to L5 (hardest).",
-        items: [1, 2, 3, 4, 5].map((d) => ({ key: `camera_d${d}`, label: `L${d}`, sub: d === 1 ? "easiest" : d === 5 ? "hardest" : "" })),
+        title: "LIBERO-Plus Camera Difficulty",
+        desc: "External-camera perturbation only. The wrist view is cropped out so viewpoint changes are easier to compare.",
+        mode: "difficulty",
+        items: [1, 2, 3, 4, 5].map((d) => ({
+          key: `camera_d${d}`,
+          label: `Level ${d}`,
+          level: d,
+          sub: d === 1 ? "easiest" : d === 5 ? "hardest" : "",
+        })),
       },
     ];
     const arrow = (d) =>
@@ -374,19 +386,29 @@
 
     GROUPS.forEach((g) => {
       const wrap = document.createElement("div");
-      wrap.className = "rollout-group";
+      wrap.className = `rollout-group${g.mode ? ` rollout-group--${g.mode}` : ""}`;
       wrap.innerHTML = `
         <div class="rg-head"><h3>${g.title}</h3><p>${g.desc}</p></div>
+        ${g.mode === "difficulty" ? `
+          <div class="difficulty-scale" aria-hidden="true">
+            <span>easier</span><i></i><span>harder</span>
+          </div>` : ""}
         <div class="carousel" data-carousel>
           <div class="car-track">
             ${g.items.map((it) => `
               <div class="car-slide car-slide--vid">
-                <article class="rollout-card">
-                  <div class="rollout-thumb rollout-thumb--wide">
+                <article class="rollout-card${g.mode === "difficulty" ? " rollout-card--difficulty" : ""}">
+                  <div class="rollout-thumb rollout-thumb--wide${g.mode === "difficulty" ? " rollout-thumb--external" : ""}">
                     <video data-key="${it.key}" muted loop playsinline preload="auto"
-                           aria-label="${g.title} — ${it.label}"></video>
+                           aria-label="${g.title} - ${it.label}"></video>
                   </div>
-                  <div class="rollout-vbody"><span class="vlabel">${it.label}</span>${it.sub ? `<span class="vsub">${it.sub}</span>` : ""}</div>
+                  <div class="rollout-vbody">
+                    <span class="vlabel">${it.label}</span>
+                    <span class="vmeta">
+                      ${g.mode === "difficulty" ? `<span class="success-pill" data-success-level="${it.level}"></span>` : ""}
+                      ${it.sub ? `<span class="vsub">${it.sub}</span>` : ""}
+                    </span>
+                  </div>
                 </article>
               </div>`).join("")}
           </div>
@@ -426,6 +448,11 @@
       vids.forEach((v) => {
         v.src = `static/videos/rollouts/${key}_${v.dataset.key}.mp4`;
         if (visible.has(v)) v.play().catch(() => {});
+      });
+      rolloutGroups.querySelectorAll("[data-success-level]").forEach((el) => {
+        const level = Number(el.dataset.successLevel);
+        const value = CAMERA_SUCCESS[key] ? CAMERA_SUCCESS[key][level - 1] : null;
+        el.textContent = value == null ? "" : `${value}%`;
       });
     };
 

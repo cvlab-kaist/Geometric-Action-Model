@@ -10,10 +10,10 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Geometric Action Model for Visuomotor Control" />
   <meta property="og:description" content="A language-conditioned manipulation policy that turns a geometric foundation model into a world-action model — 85.5% on LIBERO-Plus, 6.9 ms inference, 1.4B params." />
-  <meta property="og:image" content="static/images/video_poster.jpg" />
+  <meta property="og:image" content="static/images/teaser3.webp" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234285f4'/%3E%3Cstop offset='.55' stop-color='%239b72cb'/%3E%3Cstop offset='1' stop-color='%23d96570'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='34' font-weight='bold' fill='white' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235f2eea'/%3E%3Cstop offset='.62' stop-color='%237c4dff'/%3E%3Cstop offset='1' stop-color='%23d8bd27'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='34' font-weight='bold' fill='white' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E" />
 
   <!-- Google Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,7 +27,7 @@
       document.documentElement.dataset.theme = t === "dark" ? "dark" : "light";
     })();
   </script>
-  <link rel="stylesheet" href="static/css/style.css" />
+  <link rel="stylesheet" href="static/css/style.css?v=rollout-plus-restored" />
 </head>
 <body>
 
@@ -113,8 +113,15 @@
         </a>
       </div>
 
+      <figure class="hero-teaser reveal" style="--d:340ms">
+        <img src="static/images/teaser3.webp" alt="Teaser figure summarizing the Geometric Action Model pipeline, geometry prediction, benchmark latency, and real-world success rates." data-zoom loading="eager" />
+        <figcaption>
+          GAM reuses a geometric foundation model as the policy backbone, predicting future geometry and actions in one efficient pass.
+        </figcaption>
+      </figure>
+
       <!-- hero video -->
-      <div class="hero-media reveal" id="video" style="--d:340ms">
+      <div class="hero-media reveal" id="video" style="--d:420ms">
         <div class="media-card video-shell">
           <video id="rw-video" controls muted autoplay loop playsinline
                  poster="static/images/video_poster.jpg"
@@ -185,7 +192,7 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Method</div>
-        <h2>One geometric backbone. Perception, prediction, and action.</h2>
+        <h2>One geometric backbone for perception, prediction, and action</h2>
         <p class="lede">
           GAM cuts a pretrained GFM at an intermediate layer and inserts a causal transformer in between —
           turning a static 3D perception model into a language-conditioned world-action model with minimal
@@ -194,7 +201,7 @@
       </div>
 
       <figure class="figure-card reveal" style="--d:80ms">
-        <img src="static/images/method_architecture.webp" alt="GAM architecture: observation encoding with GFM shallow layers, a causal future predictor at the split layer, and feature propagation through GFM deeper layers for action decoding with block-causal attention." data-zoom loading="lazy" />
+        <img src="static/images/arch3.webp" alt="GAM architecture: observation encoding with GFM shallow layers, a causal future predictor at the split layer, and feature propagation through GFM deeper layers for action decoding with block-causal attention." data-zoom loading="eager" />
         <figcaption><b>GAM architecture.</b> Multi-view RGB is encoded by the GFM's shallow layers; a block-causal
         transformer predicts future latent geometry from language, proprioception, and action history; the GFM's
         deep layers decode the predicted tokens into future depth and executable action chunks.</figcaption>
@@ -228,7 +235,7 @@
           <h2 style="font-size:clamp(1.5rem,2.6vw,2rem)">Why not just another VLA or world model?</h2>
         </div>
         <figure class="figure-card reveal" style="--d:60ms">
-          <img src="static/images/method_paradigms.webp" alt="Comparison of paradigms: video world-action models in 2D pixel space, geometry-aware VLAs with passive distillation, and GAM unifying perception, geometry prediction, and action decoding inside a single GFM." data-zoom loading="lazy" />
+          <img src="static/images/compare2.webp" alt="Comparison of paradigms: video world-action models in 2D pixel space, geometry-aware VLAs with passive distillation, and GAM unifying perception, geometry prediction, and action decoding inside a single GFM." data-zoom loading="eager" />
           <figcaption><b>Three paradigms.</b> GAM moves beyond 2D latents and passive feature distillation by making
           the geometric model itself the policy.</figcaption>
         </figure>
@@ -236,20 +243,28 @@
           <div class="trio-card reveal" style="--d:0ms">
             <span class="tag">(a) Video WAMs</span>
             <h3>2D pixel-space futures</h3>
-            <p>Predict future latents and actions with video diffusion — strong temporal priors, but depth, scale,
-            and occlusion stay implicit, and inference is slow.</p>
+            <ul class="trade-list">
+              <li class="pro"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/></svg><span>Strong temporal prior from video generation</span></li>
+              <li class="con"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12h10"/></svg><span>Depth, scale, and occlusion remain implicit</span></li>
+              <li class="con"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12h10"/></svg><span>Diffusion-style inference is slow</span></li>
+            </ul>
           </div>
           <div class="trio-card reveal" style="--d:90ms">
             <span class="tag">(b) Geometry-aware VLAs</span>
             <h3>Geometry as a side signal</h3>
-            <p>Distill GFM features into a VLA backbone. The GFM is only a static feature extractor — its
-            multi-layer geometric structure is never used as the policy's own substrate.</p>
+            <ul class="trade-list">
+              <li class="pro"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/></svg><span>Injects geometric features into a VLA policy</span></li>
+              <li class="con"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12h10"/></svg><span>Uses the GFM mostly as a passive feature extractor</span></li>
+              <li class="con"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12h10"/></svg><span>Does not make the GFM's layered geometry the policy substrate</span></li>
+            </ul>
           </div>
           <div class="trio-card is-ours reveal" style="--d:180ms">
             <span class="tag">(c) GAM — ours</span>
             <h3>The GFM is the policy</h3>
-            <p>A geometric world model lives <i>inside</i> the GFM: one autoregressive token sequence and one
-            backbone forward pass yield both future geometry and actions.</p>
+            <ul class="trade-list">
+              <li class="pro"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/></svg><span>Uses the GFM itself as the shared policy backbone</span></li>
+              <li class="pro"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/></svg><span>Predicts future geometry and action chunks together</span></li>
+            </ul>
           </div>
         </div>
       </div>
@@ -261,7 +276,7 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Simulation Results</div>
-        <h2>State-of-the-art robustness, at a fraction of the cost.</h2>
+        <h2>state-of-the-art robustness with lower inference cost</h2>
         <p class="lede">
           On LIBERO, GAM matches saturated state-of-the-art success rates. On LIBERO-Plus — which perturbs
           cameras, lighting, backgrounds, and layouts — it takes the overall lead, with the smallest degradation
@@ -306,15 +321,15 @@
           <h3 style="text-align:center; margin-bottom:24px;">Single-pass inference latency</h3>
           <div class="latency">
             <div class="lat-row">
-              <div class="who">Cosmos-Policy<small>2B · diffusion</small></div>
+              <div class="who">Cosmos-Policy<small>Video Diffusion-based</small></div>
               <div class="lat-track"><div class="lat-fill" data-w="72%"></div><span class="lat-val" style="--w:72%">382.4 ms</span></div>
             </div>
             <div class="lat-row">
-              <div class="who">OpenVLA-OFT<small>7B</small></div>
+              <div class="who">OpenVLA-OFT<small>VLA</small></div>
               <div class="lat-track"><div class="lat-fill" data-w="14.6%"></div><span class="lat-val" style="--w:14.6%">77.8 ms</span></div>
             </div>
             <div class="lat-row">
-              <div class="who">π<sub>0.5</sub><small>3.3B</small></div>
+              <div class="who">π<sub>0.5</sub><small>VLA</small></div>
               <div class="lat-track"><div class="lat-fill" data-w="5.5%"></div><span class="lat-val" style="--w:5.5%">29.2 ms</span></div>
             </div>
             <div class="lat-row ours">
@@ -355,7 +370,7 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Real-Robot Results</div>
-        <h2>Robust where it matters: on a real robot.</h2>
+        <h2>Robustness on real-robot tasks</h2>
         <p class="lede">
           Four contact-rich manipulation tasks, trained from ~200 teleoperated demonstrations each.
           Half of all evaluation trials shift the external camera by <b>85 cm and 45°</b> — an out-of-distribution
@@ -364,18 +379,18 @@
       </div>
 
       <figure class="figure-card reveal" style="--d:60ms">
-        <img src="static/images/realworld_results.webp" alt="Real-world success rates for GAM, pi-0.5, and Spatial Forcing across four tasks under in-domain and out-of-domain settings, with task illustrations." data-zoom loading="lazy" />
+        <img src="static/images/real_task.webp" alt="Real-world success rates for GAM, pi-0.5, and Spatial Forcing across four tasks under in-domain and out-of-domain settings, with task illustrations." data-zoom loading="eager" />
         <figcaption><b>Real-world success rates.</b> Light bars: in-distribution. Dark bars: camera-perturbed OOD.
         GAM leads on every task in both settings.</figcaption>
       </figure>
 
       <div class="duo duo--13" style="margin-top:20px">
         <figure class="figure-card reveal" style="--d:0ms">
-          <img src="static/images/tasks_overview.webp" alt="Four real-world manipulation tasks with instructions: pick and place, stack milk and cube, place pot and pan on cooktop, insert cube into covered pot." data-zoom loading="lazy" />
+          <img src="static/images/tasks3.webp" alt="Four real-world manipulation tasks with instructions: pick and place, stack milk and cube, place pot and pan on cooktop, insert cube into covered pot." data-zoom loading="eager" />
           <figcaption><b>Task suite.</b> Pick &amp; place · stack milk &amp; cube · pot &amp; pan on cooktop · insert cube into covered pot.</figcaption>
         </figure>
         <figure class="figure-card reveal" style="--d:90ms">
-          <img src="static/images/id_ood.webp" alt="In-distribution versus out-of-distribution camera setup used for real-robot evaluation." data-zoom loading="lazy" />
+          <img src="static/images/physical_setup3.webp" alt="In-distribution versus out-of-distribution camera setup used for real-robot evaluation." data-zoom loading="eager" />
           <figcaption><b>ID vs. OOD.</b> The external camera is translated 85 cm and rotated 45° for OOD trials.</figcaption>
         </figure>
       </div>
@@ -394,7 +409,7 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Qualitative Results</div>
-        <h2>GAM imagines the geometry of what happens next.</h2>
+        <h2>GAM predicts the geometry of what happens next</h2>
         <p class="lede">
           Because future prediction lives in the GFM's latent space, GAM's forecasts decode into dense future
           depth maps that closely track ground truth — swipe through rollouts from each LIBERO suite.
@@ -452,9 +467,9 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Simulation Rollouts</div>
-        <h2>Policy rollouts, straight from the simulator.</h2>
+        <h2>Policy rollouts from simulation</h2>
         <p class="lede">
-          Uncut open-loop rollouts of GAM on LIBERO and LIBERO-Plus. Each clip shows the external camera (left)
+          Uncut open-loop rollouts of GAM on LIBERO Original and LIBERO-Plus. Each clip shows the external camera (left)
           and the wrist camera (right). Pick a task suite and swipe through.
         </p>
       </div>
@@ -482,11 +497,6 @@
              aria-label="Pretraining data mixture: donut chart of Open X-Embodiment 72%, MimicGen 18%, RoboCasa365 10%, with per-dataset bars from DROID 13.8% down to DLR EDAN 0.05%."></div>
         <figcaption><b>Pretraining mixture.</b> High-level source mixture (left) and the share of each constituent
         dataset relative to the entire training corpus (right).</figcaption>
-      </figure>
-
-      <figure class="figure-card reveal" style="--d:90ms; max-width:760px; margin:20px auto 0;">
-        <img src="static/images/env_setup.webp" alt="Real-world hardware setup: robot arm with wrist-mounted ZED camera and external RealSense camera." data-zoom loading="lazy" />
-        <figcaption><b>Hardware.</b> Wrist-mounted ZED camera + external RealSense third-person view.</figcaption>
       </figure>
     </div>
   </section>
@@ -532,6 +542,6 @@
     <div class="lb-cap"></div>
   </div>
 
-  <script src="static/js/main.js"></script>
+  <script src="static/js/main.js?v=rollout-plus-restored"></script>
 </body>
 </html>
