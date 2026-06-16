@@ -27,7 +27,7 @@
       document.documentElement.dataset.theme = t === "dark" ? "dark" : "light";
     })();
   </script>
-  <link rel="stylesheet" href="static/css/style.css?v=gam-benefit-bullets" />
+  <link rel="stylesheet" href="static/css/style.css?v=hls-video-lazy" />
 </head>
 <body>
 
@@ -123,9 +123,10 @@
       <!-- hero video -->
       <div class="hero-media reveal" id="video" style="--d:420ms">
         <div class="media-card video-shell">
-          <video id="rw-video" controls muted autoplay loop playsinline
+          <video id="rw-video" controls muted autoplay loop playsinline preload="none"
                  poster="static/images/video_poster.jpg"
-                 src="static/videos/real_world_comparison.mp4"></video>
+                 data-hls-src="static/videos/hero_hls/master.m3u8"
+                 data-mp4-src="static/videos/real_world_comparison.mp4"></video>
         </div>
         <div class="chapters" id="chapters"></div>
         <p class="hero-caption">
@@ -543,6 +544,6 @@
     <div class="lb-cap"></div>
   </div>
 
-  <script src="static/js/main.js?v=gam-benefit-bullets"></script>
+  <script src="static/js/main.js?v=hls-video-lazy"></script>
 </body>
 </html>

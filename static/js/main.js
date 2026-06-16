@@ -65,6 +65,78 @@
     return n;
   };
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const HLS_JS_URL = "https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js";
+  let hlsLoaderPromise = null;
+
+  function loadHlsJs() {
+    if (window.Hls) return Promise.resolve(window.Hls);
+    if (hlsLoaderPromise) return hlsLoaderPromise;
+    hlsLoaderPromise = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = HLS_JS_URL;
+      s.async = true;
+      s.onload = () => resolve(window.Hls);
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    return hlsLoaderPromise;
+  }
+
+  function attachHeroVideo(video) {
+    if (!video || video.dataset.attached === "true") return;
+    video.dataset.attached = "true";
+    const hlsSrc = video.dataset.hlsSrc;
+    const mp4Src = video.dataset.mp4Src;
+    const tryPlay = () => {
+      if (video.autoplay && !reduceMotion) video.play().catch(() => {});
+    };
+
+    if (hlsSrc && video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = hlsSrc;
+      video.load();
+      tryPlay();
+      return;
+    }
+
+    if (hlsSrc) {
+      loadHlsJs()
+        .then((Hls) => {
+          if (!Hls || !Hls.isSupported()) throw new Error("HLS unsupported");
+          const hls = new Hls({
+            capLevelToPlayerSize: true,
+            maxBufferLength: 18,
+            backBufferLength: 12,
+          });
+          hls.loadSource(hlsSrc);
+          hls.attachMedia(video);
+          video._hls = hls;
+          video.addEventListener("loadedmetadata", tryPlay, { once: true });
+        })
+        .catch(() => {
+          if (!mp4Src) return;
+          video.src = mp4Src;
+          video.load();
+          tryPlay();
+        });
+      return;
+    }
+
+    if (mp4Src) {
+      video.src = mp4Src;
+      video.load();
+      tryPlay();
+    }
+  }
+
+  const heroVideo = document.getElementById("rw-video");
+  if (heroVideo) {
+    const heroVideoIO = new IntersectionObserver((entries, io) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      attachHeroVideo(heroVideo);
+      io.disconnect();
+    }, { rootMargin: "420px 0px", threshold: 0.02 });
+    heroVideoIO.observe(heroVideo);
+  }
 
   function animateLines(root, lines) {
     if (reduceMotion) return;
@@ -399,7 +471,7 @@
               <div class="car-slide car-slide--vid">
                 <article class="rollout-card${g.mode === "difficulty" ? " rollout-card--difficulty" : ""}">
                   <div class="rollout-thumb rollout-thumb--wide${g.mode === "difficulty" ? " rollout-thumb--external" : ""}">
-                    <video data-key="${it.key}" muted loop playsinline preload="auto"
+                    <video data-key="${it.key}" muted loop playsinline preload="none"
                            aria-label="${g.title} - ${it.label}"></video>
                   </div>
                   <div class="rollout-vbody">
@@ -422,6 +494,14 @@
     });
 
     const vids = Array.from(rolloutGroups.querySelectorAll("video[data-key]"));
+    let activeSuite = null;
+
+    const loadRolloutVideo = (v) => {
+      if (!activeSuite || v.dataset.loadedSuite === activeSuite) return;
+      v.dataset.loadedSuite = activeSuite;
+      v.src = `static/videos/rollouts/${activeSuite}_${v.dataset.key}.mp4`;
+      v.load();
+    };
 
     // play only while on screen
     const visible = new Set();
@@ -430,6 +510,7 @@
         const v = e.target;
         if (e.isIntersecting) {
           visible.add(v);
+          loadRolloutVideo(v);
           if (v.src) v.play().catch(() => {});
         } else {
           visible.delete(v);
@@ -439,15 +520,20 @@
     }, { threshold: 0.2 });
     vids.forEach((v) => vio.observe(v));
 
-    let activeSuite = null;
     const setSuite = (key) => {
       if (key === activeSuite) return;
       activeSuite = key;
       suiteTabs.querySelectorAll("button").forEach((b) =>
         b.classList.toggle("is-active", b.dataset.suite === key));
       vids.forEach((v) => {
-        v.src = `static/videos/rollouts/${key}_${v.dataset.key}.mp4`;
-        if (visible.has(v)) v.play().catch(() => {});
+        v.pause();
+        delete v.dataset.loadedSuite;
+        v.removeAttribute("src");
+        v.load();
+      });
+      visible.forEach((v) => {
+        loadRolloutVideo(v);
+        v.play().catch(() => {});
       });
       rolloutGroups.querySelectorAll("[data-success-level]").forEach((el) => {
         const level = Number(el.dataset.successLevel);
