@@ -350,7 +350,7 @@ h3 {
 }
 
 .hero-sub {
-  font-size: clamp(.96rem, 1.35vw, 1.08rem);
+  font-size: clamp(1.02rem, 1.6vw, 1.22rem);
   color: var(--ink-2);
   max-width: 56ch;
   margin: 0 auto 26px;
