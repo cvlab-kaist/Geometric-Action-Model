@@ -343,9 +343,14 @@ h3 {
   max-width: 24ch;
   margin: 0 auto 18px;
 }
+.hero h1 .title-tail {
+  display: inline-block;
+  font-size: .86em;
+  line-height: 1.04;
+}
 
 .hero-sub {
-  font-size: clamp(1.02rem, 1.6vw, 1.22rem);
+  font-size: clamp(.96rem, 1.35vw, 1.08rem);
   color: var(--ink-2);
   max-width: 56ch;
   margin: 0 auto 26px;
@@ -401,6 +406,17 @@ h3 {
   border-color: var(--ink-3);
 }
 .btn svg { width: 17px; height: 17px; flex: none; }
+.btn--muted {
+  color: #85858f;
+  background: #f1f1f4;
+  border-color: #dedee6;
+}
+.btn--muted:hover {
+  color: #6d6d78;
+  background: #e9e9ef;
+  border-color: #d3d3dc;
+  box-shadow: none;
+}
 .btn--primary {
   background: var(--btn-primary-bg);
   border-color: var(--btn-primary-bg);
