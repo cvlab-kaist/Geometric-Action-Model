@@ -408,6 +408,7 @@ h3 {
   border-color: var(--ink-3);
 }
 .btn svg { width: 17px; height: 17px; flex: none; }
+.btn-logo { width: 18px; height: 18px; flex: none; object-fit: contain; }
 .btn--muted {
   color: #85858f;
   background: #f1f1f4;
