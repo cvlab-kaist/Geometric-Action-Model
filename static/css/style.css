@@ -161,6 +161,7 @@ h2 {
   margin-bottom: 18px;
   max-width: 21ch;
 }
+.h2-wide { max-width: 31ch; }
 .section-head { margin-bottom: 40px; }
 .section-head p.lede { font-size: 1.13rem; color: var(--ink-2); max-width: 62ch; }
 
