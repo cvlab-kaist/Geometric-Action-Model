@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Geometric Action Model for Robot Policy Learning</title>
-  <meta name="description" content="GAM repurposes a pretrained geometric foundation model as a single shared backbone for perception, future prediction, and action decoding — more accurate, more robust, and 55× faster than foundation-model-scale baselines." />
+  <meta name="description" content="GAM repurposes a pretrained geometric foundation model as a single shared backbone for perception, future prediction, and action decoding, more accurate, more robust, and 55× faster than foundation-model-scale baselines." />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Geometric Action Model for Robot Policy Learning" />
-  <meta property="og:description" content="A language-conditioned manipulation policy that turns a geometric foundation model into a world-action model — 85.5% on LIBERO-Plus, 6.9 ms inference, 1.4B params." />
+  <meta property="og:description" content="A language-conditioned manipulation policy that turns a geometric foundation model into a world-action model with 85.5% on LIBERO-Plus, 6.9 ms inference, 1.4B params." />
   <meta property="og:image" content="static/images/teaser3.webp" />
   <meta name="twitter:card" content="summary_large_image" />
 
@@ -69,7 +69,7 @@
       <p class="hero-sub reveal" style="--d:120ms">
         A language-conditioned manipulation policy that repurposes a pretrained
         <b>geometric foundation model</b> as one shared backbone for perception,
-        future prediction, and action — <b>more accurate, more robust, faster, and lighter</b>
+        future prediction, and action; <b>more accurate, more robust, faster, and lighter</b>
         than foundation-model-scale baselines.
       </p>
 
@@ -193,9 +193,9 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Method</div>
-        <h2>One geometric backbone for perception, prediction, and action</h2>
+        <h2>One geometric backbone for perception, prediction, <span class="nowrap">and action</span></h2>
         <p class="lede">
-          GAM cuts a pretrained GFM at an intermediate layer and inserts a causal transformer in between —
+          GAM cuts a pretrained GFM at an intermediate layer and inserts a causal transformer in between,
           turning a static 3D perception model into a language-conditioned world-action model with minimal
           architectural change, while preserving its rich geometric priors.
         </p>
@@ -213,27 +213,27 @@
           <div class="step-no">1</div>
           <h3>Observation Encoding</h3>
           <p>The GFM's shallow layers are reused as the observation encoder, mapping multi-view RGB frames into
-          spatially meaningful latent geometric states — no task-specific encoder trained from scratch.</p>
+          spatially meaningful latent geometric states, no task-specific encoder trained from scratch.</p>
         </div>
         <div class="step-card reveal" style="--d:90ms">
           <div class="step-no">2</div>
           <h3>Causal Future Predictor</h3>
           <p>A causal transformer inserted at the split layer forecasts the next latent geometric state,
-          conditioned on the task instruction, proprioception, and action history — next-token prediction,
+          conditioned on the task instruction, proprioception, and action history: next-token prediction,
           but for 3D world states.</p>
         </div>
         <div class="step-card reveal" style="--d:180ms">
           <div class="step-no">3</div>
           <h3>Propagation &amp; Decoding</h3>
           <p>Predicted future tokens flow through the remaining GFM blocks: the original depth head decodes
-          future geometry while a lightweight action head regresses the executable action chunk — one forward
+          future geometry while a lightweight action head regresses the executable action chunk in one forward
           pass, both outputs.</p>
         </div>
       </div>
 
       <div style="margin-top:64px">
         <div class="section-head reveal">
-          <h2 style="font-size:clamp(1.5rem,2.6vw,2rem)">Why not just another VLA or world model?</h2>
+          <h2 style="font-size:clamp(1.5rem,2.6vw,2rem)">Why not just another VLA or <span class="nowrap">world model?</span></h2>
         </div>
         <figure class="figure-card reveal" style="--d:60ms">
           <img src="static/images/compare2.webp" alt="Comparison of paradigms: video world-action models in 2D pixel space, geometry-aware VLAs with passive distillation, and GAM unifying perception, geometry prediction, and action decoding inside a single GFM." data-zoom loading="eager" />
@@ -260,7 +260,7 @@
             </ul>
           </div>
           <div class="trio-card is-ours reveal" style="--d:180ms">
-            <span class="tag">(c) GAM — ours</span>
+            <span class="tag">(c) GAM (ours)</span>
             <h3>The GFM is the policy</h3>
             <ul class="trade-list">
               <li class="pro"><svg class="trade-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M7 12h10"/></svg><span>Preserves rich 3D geometric priors for policy learning</span></li>
@@ -280,8 +280,8 @@
         <div class="eyebrow">Simulation Results</div>
         <h2>state-of-the-art robustness with lower inference cost</h2>
         <p class="lede">
-          On LIBERO, GAM matches saturated state-of-the-art success rates. On LIBERO-Plus — which perturbs
-          cameras, lighting, backgrounds, and layouts — it takes the overall lead, with the smallest degradation
+          On LIBERO, GAM matches saturated state-of-the-art success rates. On LIBERO-Plus, which perturbs
+          cameras, lighting, backgrounds, and layouts, it takes the overall lead, with the smallest degradation
           of any method and a <b>+9.7%p</b> margin in the camera-perturbation split.
         </p>
       </div>
@@ -340,7 +340,7 @@
             </div>
           </div>
           <p style="font-size:.88rem; color:var(--ink-3); text-align:center; margin-top:22px;">
-            One feed-forward pass with KV-cached history — up to <b>55× faster</b> than diffusion-based policies.
+            One feed-forward pass with KV-cached history, up to <b>55× faster</b> than diffusion-based policies.
           </p>
         </div>
       </div>
@@ -354,8 +354,8 @@
         </div>
         <div class="panel-grid" id="robustness-panels" role="img"
              aria-label="Eight line charts of GAM success rate per LIBERO suite across difficulty levels, one per perturbation factor: average, camera, robot, light, background, noise, layout, and language."></div>
-        <figcaption><b>Zero-shot robustness across every perturbation factor</b> — camera, robot, light, background,
-        noise, layout, and language — reported across difficulty levels on LIBERO-Plus.</figcaption>
+        <figcaption><b>Zero-shot robustness across every perturbation factor</b>: camera, robot, light, background,
+        noise, layout, and language, reported across difficulty levels on LIBERO-Plus.</figcaption>
       </figure>
 
       <p style="text-align:center; margin-top:32px;" class="reveal">
@@ -372,10 +372,10 @@
     <div class="wrap">
       <div class="section-head reveal">
         <div class="eyebrow">Real-Robot Results</div>
-        <h2>Robustness on real-robot tasks</h2>
+        <h2>Robustness on<br><span class="nowrap">real-robot tasks</span></h2>
         <p class="lede">
           Four contact-rich manipulation tasks, trained from ~200 teleoperated demonstrations each.
-          Half of all evaluation trials shift the external camera by <b>85 cm and 45°</b> — an out-of-distribution
+          Half of all evaluation trials shift the external camera by <b>85 cm and 45°</b>, an out-of-distribution
           setting where 2D-based policies collapse and GAM keeps working.
         </p>
       </div>
@@ -414,7 +414,7 @@
         <h2>GAM predicts the geometry of what happens next</h2>
         <p class="lede">
           Because future prediction lives in the GFM's latent space, GAM's forecasts decode into dense future
-          depth maps that closely track ground truth — swipe through rollouts from each LIBERO suite.
+          depth maps that closely track ground truth. Swipe through rollouts from each LIBERO suite.
         </p>
       </div>
 
@@ -423,31 +423,31 @@
           <div class="car-slide">
             <figure class="figure-card">
               <img src="static/images/depth_vis_spatial.webp" alt="Predicted future depth on LIBERO-Spatial: bowl from table center to plate." data-zoom loading="lazy" />
-              <figcaption><b>LIBERO-Spatial</b> · "Move the bowl from the table center to the plate" — current RGB/depth, ground-truth future, and GAM's predicted future depth over time.</figcaption>
+              <figcaption><b>LIBERO-Spatial</b> · "Move the bowl from the table center to the plate": current RGB/depth, ground-truth future, and GAM's predicted future depth over time.</figcaption>
             </figure>
           </div>
           <div class="car-slide">
             <figure class="figure-card">
               <img src="static/images/depth_vis_object.webp" alt="Predicted future depth on LIBERO-Object: tomato sauce to basket." data-zoom loading="lazy" />
-              <figcaption><b>LIBERO-Object</b> · "Put the tomato sauce in the basket" — predicted future depth stays aligned with the true scene evolution.</figcaption>
+              <figcaption><b>LIBERO-Object</b> · "Put the tomato sauce in the basket": predicted future depth stays aligned with the true scene evolution.</figcaption>
             </figure>
           </div>
           <div class="car-slide">
             <figure class="figure-card">
               <img src="static/images/depth_vis_long.webp" alt="Predicted future depth on LIBERO-Long: cream cheese and butter to basket." data-zoom loading="lazy" />
-              <figcaption><b>LIBERO-Long</b> · "Put the cream cheese and butter in the basket" — coherent geometric futures across a long-horizon task.</figcaption>
+              <figcaption><b>LIBERO-Long</b> · "Put the cream cheese and butter in the basket": coherent geometric futures across a long-horizon task.</figcaption>
             </figure>
           </div>
           <div class="car-slide">
             <figure class="figure-card">
               <img src="static/images/depth_vis_goal.webp" alt="Predicted future depth on LIBERO-Goal: wine bottle on cabinet." data-zoom loading="lazy" />
-              <figcaption><b>LIBERO-Goal</b> · "Put the wine bottle on the cabinet" — the same backbone that acts also predicts the 3D future.</figcaption>
+              <figcaption><b>LIBERO-Goal</b> · "Put the wine bottle on the cabinet": the same backbone that acts also predicts the 3D future.</figcaption>
             </figure>
           </div>
           <div class="car-slide">
             <figure class="figure-card">
               <img src="static/images/attention_vis.webp" alt="Attention maps of action tokens focusing on task-relevant objects and the end effector." data-zoom loading="lazy" />
-              <figcaption><b>Action-token attention.</b> Action tokens learn to attend to task-relevant objects and the end effector — geometry-grounded credit assignment for free.</figcaption>
+              <figcaption><b>Action-token attention.</b> Action tokens learn to attend to task-relevant objects and the end effector, geometry-grounded credit assignment for free.</figcaption>
             </figure>
           </div>
         </div>
@@ -490,7 +490,7 @@
         <h2>Pretrained on 784K trajectories. Post-trained per benchmark.</h2>
         <p class="lede">
           GAM builds on DA3-Giant and is pretrained on a mixture of Open-X Embodiment (72%), MimicGen (18%),
-          and RoboCasa365 (10%) single-arm robot data, then fine-tuned on each benchmark — with future-depth
+          and RoboCasa365 (10%) single-arm robot data, then fine-tuned on each benchmark with future-depth
           supervision from simulators or teacher pseudo-depth.
         </p>
       </div>

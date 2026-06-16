@@ -1,5 +1,5 @@
 /* ==========================================================================
-   GAM — Geometric Action Model · Project Page
+   GAM - Geometric Action Model · Project Page
    Purple/yellow GAM project page theme
    ========================================================================== */
 
@@ -122,6 +122,7 @@ a:hover { text-decoration: underline; }
 /* ------------------------------------------------------------------ utils */
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 .wrap--narrow { max-width: 820px; }
+.nowrap { white-space: nowrap; }
 
 .section { padding: 96px 0 32px; }
 .section--tint {
