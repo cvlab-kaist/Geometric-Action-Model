@@ -1,0 +1,15 @@
+.git
+__pycache__/
+*.pyc
+*.pt
+*.pth
+*.ckpt
+# data / checkpoints / experiment artifacts (mount at runtime under $DA3_ROOT instead)
+data/
+checkpoints/
+gt_depth/
+results/
+eval_results/
+wandb/
+logs/
+Depth-Anything-3/

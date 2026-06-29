@@ -1,0 +1,28 @@
+# Conda environment for the GAM LIBERO / LIBERO-Plus release.
+#
+#   conda env create -f environment.yml
+#   conda activate gam-libero
+#   bash scripts/setup_sources.sh        # clone + install DA3 backbone, LIBERO, LIBERO-Plus
+#
+# Python 3.12 + torch from the cu124 wheel index matches the public Docker
+# environment. The Docker image pins the same package set on a torch 2.5.1 base.
+name: gam-libero
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip>=24
+  - ffmpeg          # video encode/decode for rollout artifacts
+  - imagemagick     # LIBERO-Plus motion-blur perturbations via Wand
+  # System GL libs for headless MuJoCo rendering (LIBERO closed-loop eval).
+  # With an NVIDIA driver, set MUJOCO_GL=egl (uses the system EGL); mesalib
+  # provides an OSMesa software fallback (MUJOCO_GL=osmesa).
+  - mesalib
+  - pip:
+      # torch with CUDA; adjust the index for your platform.
+      - --extra-index-url https://download.pytorch.org/whl/cu124
+      - -r requirements.txt
+# After `conda env create` + `scripts/setup_sources.sh`, set per shell:
+#   export DA3_ROOT=/path/to/data_root   (configs resolve data/ckpt paths under this)
+#   export PYTHONPATH=$DA3_ROOT/src:$DA3_LIBERO_SOURCE_DIR:$PYTHONPATH
+#   export MUJOCO_GL=egl                 (or osmesa for software rendering)

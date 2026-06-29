@@ -1,0 +1,105 @@
+# LIBERO HDF5 single-GPU smoke for the gam autoregressive FuturePredictor.
+# The predictor consumes DA3 block-12 visual tokens and DA3 blocks 13-39 run
+# on a fixed recent context window up to seven observed slots plus one predicted future frame.
+
+stage_1:
+  ckpt_path: "${oc.env:DA3_ROOT,.}/checkpoints/track4world_da3.pth"
+  encoder_input_size: 224
+  normalization_stat_path: null
+
+da3_finetune:
+  enabled: true
+  freeze_blocks_before: 13
+  n_action_steps: 8
+  n_views: 2
+  use_temporal_embed: false
+  action_input_rate: 0.4
+
+action_head:
+  type: "mlp_resnet"
+  input_dim: 1536
+  hidden_dim: 1536
+  n_dims: 7
+  chunk_size: 2
+  chunk_position_encoding: "learned"
+  num_blocks: 2
+  pool_mode: "mean"
+
+regularization:
+  lambda_feat: 0.0
+  layer_weight_min: 0.5
+  adaptive_lambda: false
+  lambda_depth: 3.0
+  depth_grad_weight: 1.0
+  depth_decode_chunk_size: 2
+  lambda_camera: 0.0
+
+proprioception:
+  proprio_dim: 7
+
+predictor:
+  enabled: true
+  type: "gam"
+  d_model: 1024
+  depth: 12
+  num_heads: 16
+  ffn_ratio: 4.0
+  dropout: 0.0
+  num_patches_per_view: 256
+  use_language: true
+  language_dim: 768
+  language_len: 77
+  clip_model: "openai/clip-vit-large-patch14"
+  lambda_feat_future: 1.0
+  lambda_sigreg: 0.0
+  H_choices: [1, 2, 3, 4, 5, 6, 7]
+  H_weights: [0.25, 0.20, 0.15, 0.12, 0.10, 0.09, 0.09]
+  num_register_tokens: 0
+  deep_gradient_checkpointing: true
+
+training:
+  global_batch_size: 4
+  micro_batch_size: 1
+  base_lr: 5.0e-5
+  head_lr_mult: 10.0
+  predictor_lr_mult: 0.2
+  adam_eps: 1.0e-6
+  weight_decay: 0.0
+  lambda_action: 3.0
+  grad_accum_steps: 1
+  epochs: 1
+  clip_grad: 1.0
+  warmup_steps: 10
+  max_steps: 20
+  min_lr_ratio: 0.01
+  log_every: 1
+  ckpt_every: 999999
+  vis_every: 10
+  eval_every: 999999
+  global_seed: 42
+  num_workers: 2
+  bf16: true
+  compile: false
+
+dataset:
+  type: "libero_hdf5"
+  hdf5_root: "${oc.env:DA3_ROOT,.}/data/libero_noop"
+  stats_dir: "${oc.env:DA3_ROOT,.}/data/libero_noop/_stats"
+  image_size: [224, 224]
+  future_steps: 7
+  chunk_size: 2
+  include_current_action: true
+  eval_ratio: 0.05
+  proprio_dim: 7
+  n_views: 2
+  source_fps: 20
+  da3_input_rotate180: true
+  da3_input_vflip: false
+  # GT depth is read from the embedded LIBERO HDF5 (obs/agentview_depth + obs/eye_in_hand_depth); no external sidecar.
+  gt_depth_root: null
+  gt_depth_require_geometry: true
+  action_stats_samples: 256
+  proprio_stats_samples: 256
+  camera_keys: ["agentview_rgb", "eye_in_hand_rgb"]
+
+use_dit: false

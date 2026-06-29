@@ -1,0 +1,45 @@
+__pycache__/
+*.pyc
+# *.pt
+*.pth
+*.safetensors
+core_*
+results/
+pretrained_models/
+# model_stats/
+checkpoints/
+wandb/
+venv-container/
+rlbench_runtime/
+*.log
+logs/
+.caches/
+.local/
+tmp/
+*.egg-info/
+eval_log*.txt
+train_log*.txt
+nohup.out
+docs/_legacy/
+demo/
+GLD_paper/
+PLAN_GLD*.jpg
+PLAN_world_model_robot_action.md
+.triton_cache_*
+.triton_cache/
+.torch_ext_*
+.codex
+.claude/env/*.local.env
+
+# data / weights symlinked in for local runs (never commit)
+data/
+!src/robot/data/
+!src/robot/data/*.py
+gt_depth/
+*.pt
+Depth-Anything-3/
+LIBERO/
+.local/
+Depth-Anything-3
+LIBERO
+LIBERO-plus

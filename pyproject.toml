@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "da3-gam-libero"
+version = "0.1.0"
+description = "DA3-Giant gam world-action model for LIBERO / LIBERO-Plus"
+requires-python = ">=3.10"
+dependencies = []  # see requirements.txt
+
+[tool.setuptools.packages.find]
+where = ["src"]

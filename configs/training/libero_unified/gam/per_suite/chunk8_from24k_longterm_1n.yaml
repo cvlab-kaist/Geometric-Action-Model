@@ -1,0 +1,162 @@
+# Daint per-suite fine-tune from h7 chunk8 4n L1 24k checkpoint.
+# Suite: libero_10. 1 node × 4 GH200, DDP only.
+# eval_every=5000 / ckpt_every=5000 (every 5k step, aligned across
+# all 4 suite jobs at step 25k/30k/35k/...).
+#
+# Phase A (Daint, GH200 95GB): depth_decode_chunk_size=8 +49% throughput.
+#   compile=false (only +5%), micro_batch=3 (mb=4 OOM at chunk=1).
+#   DDP only (Path B can't use DeepSpeed).
+#
+# Loss balance fix: lambda_depth 0.05 -> 1.0 (20x). Phase A.2 numbers
+# at step 60 (raw): action_l1=0.48, feat=0.66, depth=0.60. Old weighted
+# (action 1.45 / feat 0.66 / depth 0.030) gave depth 1.4% of total and
+# the depth raw value was flat across 60 steps while action dropped 4x
+# (depth signal effectively ignored). New weighting (action 1.45 /
+# feat 0.66 / depth 0.60) lands depth at ~25% so it actually trains.
+# Resume from a 24k ckpt that was trained at lambda_depth=0.05, so
+# expect a one-time loss-magnitude bump at step 24001 : closed-loop SR
+# at the next eval (step 25000) is the real proxy for whether the joint
+# action+depth fine-tune is helping.
+#
+# closed_loop_eval: own suite only, 5 trials × 10 tasks, log_video=true,
+# detailed_video=true (depth/RGB pred + action chunk overlay).
+
+stage_1:
+  ckpt_path: ${oc.env:DA3_ROOT,.}/checkpoints/track4world_da3.pth
+  encoder_input_size: 224
+  normalization_stat_path: null
+da3_finetune:
+  enabled: true
+  freeze_blocks_before: 13
+  n_action_steps: 8
+  n_views: 2
+  use_temporal_embed: false
+  action_input_rate: 0.4
+action_head:
+  type: mlp_resnet
+  input_dim: 1536
+  hidden_dim: 1536
+  n_dims: 7
+  chunk_size: 8
+  chunk_position_encoding: learned
+  num_blocks: 2
+  pool_mode: mean
+regularization:
+  lambda_feat: 0.0
+  layer_weight_min: 0.5
+  adaptive_lambda: false
+  lambda_depth: 1.0
+  depth_grad_weight: 1.0
+  depth_decode_chunk_size: 8
+  lambda_camera: 0.0
+proprioception:
+  proprio_dim: 7
+predictor:
+  enabled: true
+  type: gam
+  d_model: 1024
+  depth: 12
+  num_heads: 16
+  ffn_ratio: 4.0
+  dropout: 0.0
+  num_patches_per_view: 256
+  use_language: true
+  language_dim: 768
+  language_len: 77
+  clip_model: openai/clip-vit-large-patch14
+  lambda_feat_future: 1.0
+  lambda_sigreg: 0.0
+  feature_loss_type: l1
+  H_choices:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  H_weights:
+  - 0.083333
+  - 0.083333
+  - 0.083333
+  - 0.083333
+  - 0.083333
+  - 0.083333
+  - 0.5
+  num_register_tokens: 0
+  deep_gradient_checkpointing: false
+training:
+  global_batch_size: 12
+  micro_batch_size: 3
+  base_lr: 5.0e-05
+  head_lr_mult: 10.0
+  predictor_lr_mult: 0.2
+  adam_eps: 1.0e-06
+  weight_decay: 0.0
+  lambda_action: 3.0
+  grad_accum_steps: 1
+  epochs: 500000
+  clip_grad: 1.0
+  warmup_steps: 100
+  max_steps: 150000
+  min_lr_ratio: 0.01
+  log_every: 50
+  ckpt_every: 5000
+  vis_every: 500
+  eval_every: 5000
+  global_seed: 42
+  num_workers: 8
+  bf16: true
+  compile: false
+  persistent_workers: true
+  closed_loop_eval:
+    history_horizon: 3   # rollout history window (1=fastest, 3=best SR per H ablation 2026-04-24, 7=default H_choices max)
+    enabled: true
+    suites:
+    - libero_10
+    num_tasks_per_suite: all
+    num_trials_per_task: 5
+    num_steps_wait: 10
+    action_horizon: 1
+    action_repeat: 1
+    action_repeat_mode: split_delta
+    env_control_hz: 20
+    policy_hz: 20
+    camera_size: 128
+    seed: 7
+    env_seed: 0
+    log_video: true
+    video_max_per_eval: 4
+    detailed_video: true
+    max_steps_by_suite:
+      libero_spatial: 220
+      libero_object: 280
+      libero_goal: 300
+      libero_10: 520
+dataset:
+  type: libero_hdf5
+  hdf5_root: ${oc.env:DA3_ROOT,.}/data/libero_noop
+  stats_dir: ${oc.env:DA3_ROOT,.}/data/libero_noop/_stats
+  image_size:
+  - 224
+  - 224
+  future_steps: 7
+  chunk_size: 8
+  include_current_action: true
+  eval_ratio: 0.05
+  proprio_dim: 7
+  n_views: 2
+  source_fps: 20
+  da3_input_rotate180: true
+  da3_input_vflip: false
+  # GT depth is read from the embedded LIBERO HDF5 (obs/agentview_depth + obs/eye_in_hand_depth); no external sidecar.
+  gt_depth_root: null
+  gt_depth_require_geometry: true
+  action_stats_samples: 10000
+  proprio_stats_samples: 10000
+  camera_keys:
+  - agentview_rgb
+  - eye_in_hand_rgb
+  suites:
+  - libero_10
+use_dit: false
