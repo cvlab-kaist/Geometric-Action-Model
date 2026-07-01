@@ -92,6 +92,7 @@ Runtime Paths:
 ```bash
 export DA3_ROOT=/path/to/this_repo
 export DA3_BASE_CKPT=$DA3_ROOT/checkpoints/track4world_da3.pth
+export GAM_PRETRAINED_CKPT=$DA3_ROOT/checkpoints_hf/3da-libero-gam/pretrained/pretrained-gam.pt
 export DA3_LIBERO_SOURCE_DIR=$DA3_ROOT/LIBERO
 export DA3_LIBERO_PLUS_DIR=$DA3_ROOT/LIBERO-plus
 export PYTHONPATH=$DA3_ROOT/src:$DA3_LIBERO_PLUS_DIR:$DA3_LIBERO_SOURCE_DIR:$PYTHONPATH
@@ -107,6 +108,7 @@ repository root:
 ```text
 $DA3_ROOT/
   checkpoints/track4world_da3.pth
+  checkpoints_hf/3da-libero-gam/pretrained/pretrained-gam.pt
   data/libero_noop/<suite>/*.hdf5
   data/libero_noop/_stats/
 ```
@@ -119,10 +121,19 @@ hf download SeonghuJeon/3da-libero-training-assets \
   --local-dir .
 ```
 
-Download the released GAM checkpoints:
+Download the released GAM checkpoints, including the `pretrained-gam`
+initialization checkpoint:
 
 ```bash
 hf download SeonghuJeon/3da-libero-gam \
+  --local-dir checkpoints_hf/3da-libero-gam
+```
+
+To download only the pretrained initialization checkpoint:
+
+```bash
+hf download SeonghuJeon/3da-libero-gam \
+  pretrained/pretrained-gam.pt \
   --local-dir checkpoints_hf/3da-libero-gam
 ```
 
@@ -142,6 +153,10 @@ Expected checkpoint layout:
 | `object` | `libero_object` | `object/gam.pt` | `object/config.yaml` |
 | `goal` | `libero_goal` | `goal/gam.pt` | `goal/config.yaml` |
 | `long` | `libero_10` | `long/gam.pt` | `long/config.yaml` |
+
+The pretrained initialization checkpoint is available at
+`pretrained/pretrained-gam.pt`. To use it for training, set
+`stage_1.ckpt_path` to the downloaded path.
 
 ## Evaluation
 
@@ -182,6 +197,7 @@ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 deepspeed --include localhost:0,1,2,3 src/train_robot.py \
   --config configs/training/libero_unified/gam/chunk8_150k_2node.yaml \
   --deepspeed_config configs/training/libero_unified/deepspeed/micro2.json \
+  --set stage_1.ckpt_path=$GAM_PRETRAINED_CKPT \
   --wandb \
   --wandb-name gam_libero
 ```

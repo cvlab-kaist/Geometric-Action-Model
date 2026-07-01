@@ -22,8 +22,20 @@ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 deepspeed --include localhost:0,1,2,3 src/train_robot.py \
   --config configs/training/libero_unified/gam/chunk8_150k_2node.yaml \
   --deepspeed_config configs/training/libero_unified/deepspeed/micro2.json \
+  --set stage_1.ckpt_path=$GAM_PRETRAINED_CKPT \
   --wandb \
   --wandb-name gam_libero
+```
+
+Use the released `pretrained-gam` checkpoint as the stage-1 initialization by
+downloading it from the GAM checkpoint repository and exporting its path:
+
+```bash
+hf download SeonghuJeon/3da-libero-gam \
+  pretrained/pretrained-gam.pt \
+  --local-dir checkpoints_hf/3da-libero-gam
+
+export GAM_PRETRAINED_CKPT=$DA3_ROOT/checkpoints_hf/3da-libero-gam/pretrained/pretrained-gam.pt
 ```
 
 ## Config Reference
@@ -37,7 +49,7 @@ configs/training/libero_unified/gam/chunk8_150k_2node.yaml
 
 | YAML key | Meaning |
 |----------|---------|
-| `stage_1.ckpt_path` | DA3-Giant base checkpoint loaded before robot fine-tuning |
+| `stage_1.ckpt_path` | Stage-1 initialization checkpoint loaded before robot fine-tuning. Set this to `pretrained/pretrained-gam.pt` after downloading the released `pretrained-gam` checkpoint |
 | `da3_finetune.enabled` | Enables the DA3-Giant GAM fine-tuning path |
 | `da3_finetune.freeze_blocks_before` | Freezes DA3 blocks before this index, with GAM using blocks 0-12 as the geometric encoder |
 | `da3_finetune.n_action_steps` | Low-level actions represented by one GAM action token sequence |
