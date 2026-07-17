@@ -2874,6 +2874,11 @@ def build_robot_dataset(dataset_cfg: Dict[str, Any], is_eval: bool = False) -> D
     pad_views_to_max = _pad_views_to_max_enabled(dataset_cfg)
     view_max_views = _configured_view_max(dataset_cfg) if pad_views_to_max else None
     repeat_missing_views = _repeat_missing_views(dataset_cfg)
+    if dataset_type in {"pretraining", "gam_pretraining"}:
+        from .pretraining import build_pretraining_dataset
+
+        return build_pretraining_dataset(dataset_cfg, is_eval=is_eval)
+
     if dataset_type == "mimicgen":
         raise NotImplementedError(
             "dataset.type='mimicgen' is outside this public LIBERO release."

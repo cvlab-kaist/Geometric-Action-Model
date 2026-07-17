@@ -11,6 +11,31 @@
 Base: 224x224 images, external + wrist views, 8-step action chunks. Views are
 configurable.
 
+## Loader
+
+```bash
+pip install lerobot==0.4.4
+```
+
+```yaml
+dataset:
+  type: gam_pretraining
+  openx_root: /path/to/openx_lerobot
+  mimicgen_root: /path/to/mimicgen
+  mimicgen_depth_root: /path/to/mimicgen_depth
+  task_descriptions_path: /path/to/mimicgen/task_descriptions.json
+  robocasa_root: /path/to/robocasa/v1.0
+  robocasa_depth_index_path: /path/to/robocasa365_depth/index.json
+  stats_dir: /path/to/stats
+  image_size: [224, 224]
+  future_steps: 1
+  chunk_size: 8
+  include_current_action: true
+  n_views: 2
+```
+
+Set `n_views` to the number of camera views used by the model. Use `all` to keep every available view.
+
 ## Datasets
 
 | Source | Dataset key | Download |
@@ -70,13 +95,15 @@ hf download amandlek/mimicgen_datasets \
 ### RoboCasa365
 
 ```bash
-python -m robocasa.scripts.download_datasets \
-  --split pretrain --source human
+python "$GAM_ROOT/scripts/pretraining/download_robocasa.py" \
+  --output-root "$DATA_ROOT/robocasa"
 ```
 
-Use the downloaded `v1.0` directory as `--robocasa-root`.
+The dataset root is `$DATA_ROOT/robocasa/v1.0`.
 
 ## Depth
+
+Use the upstream MimicGen and RoboCasa simulator environments for depth export.
 
 ### MimicGen
 
@@ -132,5 +159,8 @@ Use `--layout canonical7` for converted actions and
 ```text
 a_norm = 2 * (a - q01) / (q99 - q01 + eps) - 1
 ```
+
+`train_robot.py` computes per-dataset q01/q99 files through the loader when
+`stats_dir` is empty.
 
 Upstream licenses and citation requirements apply.

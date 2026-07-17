@@ -211,7 +211,7 @@ closed-loop eval.
 
 ## To Do
 
-- [ ] Pretraining dataset code release
+- [x] Pretraining dataset code release
 
 ## Acknowledgements
 
