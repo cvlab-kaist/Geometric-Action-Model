@@ -16,9 +16,11 @@ from robot.data.pretraining import (
     MimicGenSequenceDataset,
     OXE_SPECS,
     PAPER_SOURCE_RATIOS,
+    _select_oxe_specs,
     canonicalize_action,
     canonicalize_state,
 )
+from robot.data.pretraining_filters import load_episode_blacklist, load_nonidle_ranges
 
 
 class _NamedDataset(torch.utils.data.Dataset):
@@ -33,11 +35,25 @@ class _NamedDataset(torch.utils.data.Dataset):
         return {"value": index, "mixture_source": self.name}
 
 
+class _StatsDataset(_NamedDataset):
+    def compute_action_statistics(self, max_samples=None):
+        return {self.name: {"q01": np.zeros(7), "q99": np.ones(7), "mean": np.zeros(7), "std": np.ones(7)}}
+
+    def compute_proprio_statistics(self, max_samples=None):
+        return self.compute_action_statistics(max_samples)
+
+
 class PretrainingRegistryTest(unittest.TestCase):
     def test_registry_and_paper_ratios(self):
         self.assertEqual(len(OXE_SPECS), 23)
         self.assertEqual(len({spec.name for spec in OXE_SPECS}), 23)
         self.assertAlmostEqual(sum(PAPER_SOURCE_RATIOS.values()), 1.0)
+
+    def test_select_oxe_specs(self):
+        selected = _select_oxe_specs(["dlr_edan_shared_control", "droid"])
+        self.assertEqual([spec.name for spec in selected], ["droid", "dlr_edan_shared_control"])
+        with self.assertRaisesRegex(ValueError, "Unknown Open X-Embodiment"):
+            _select_oxe_specs(["missing"])
 
     def test_source_schedule(self):
         sources = [
@@ -47,6 +63,25 @@ class PretrainingRegistryTest(unittest.TestCase):
         ]
         mixture = DatasetMixture(sources, epoch_size=10_000)
         self.assertEqual(mixture.counts.tolist(), [7200, 1800, 1000])
+
+    def test_mixture_statistics_cover_all_leaves(self):
+        mixture = DatasetMixture([
+            ("left", _StatsDataset("left"), 0.5),
+            ("right", _StatsDataset("right"), 0.5),
+        ], epoch_size=10)
+        self.assertEqual(set(mixture.compute_action_statistics(max_samples=2)), {"left", "right"})
+
+
+class PretrainingFilterTest(unittest.TestCase):
+    def test_filter_json(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            ranges_path = root / "ranges.json"
+            blacklist_path = root / "blacklist.json"
+            ranges_path.write_text(json.dumps({"1": [[2, 8], [9, 9]], "2": {"start": 3, "end": 7}}))
+            blacklist_path.write_text(json.dumps({"episodes": [2, "4"]}))
+            self.assertEqual(load_nonidle_ranges(ranges_path), {1: [(2, 8)], 2: [(3, 7)]})
+            self.assertEqual(load_episode_blacklist(blacklist_path), {2, 4})
 
     def test_canonical_action_shapes(self):
         state = torch.zeros(4, 8)
@@ -135,7 +170,7 @@ class MimicGenLoaderTest(unittest.TestCase):
             path,
             depth_meters=np.ones((n_frames, 2, 12, 16), dtype=np.float32),
             frame_indices=np.arange(n_frames, dtype=np.int64),
-            camera_names=np.asarray(["agentview", "robot0_eye_in_hand"]),
+            camera_names=np.asarray(["agentview", "robot0_eye_in_hand"], dtype=object),
             camera_intrinsics=intrinsics,
             camera_extrinsics_c2w=extrinsics,
         )

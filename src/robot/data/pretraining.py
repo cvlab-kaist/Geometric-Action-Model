@@ -39,6 +39,11 @@ from .dataset import (
     _scale_crop_params_to_source,
     _transform_intrinsics_for_crop_resize,
 )
+from .pretraining_filters import (
+    load_episode_blacklist,
+    load_nonidle_ranges,
+    resolve_filter_path,
+)
 
 
 CANONICAL_ACTION = (
@@ -61,6 +66,9 @@ class OXESpec:
     state_keys: tuple[str, ...] = ("observation.state",)
     action_mask: tuple[bool, ...] = FULL_ACTION_MASK
     bgr_cameras: tuple[str, ...] = ()
+    nonidle_ranges_path: str | None = None
+    blacklist_episodes_path: str | None = None
+    require_nonidle_range: bool = False
 
 
 def _spec(
@@ -91,7 +99,10 @@ OXE_SPECS = (
            "observation.images.exterior_1_left"),
           "droid_target", "droid_state", action_key="action.cartesian_position",
           state_keys=("observation.state.cartesian_position",
-                      "observation.state.gripper_position")),
+                      "observation.state.gripper_position"),
+          nonidle_ranges_path="_stats/droid_openpi_nonidle_ranges.json",
+          blacklist_episodes_path="_stats/droid_blacklist_eps.json",
+          require_nonidle_range=True),
     _spec("taco_play", "lerobot/taco_play", 60,
           ("observation.images.rgb_static", "observation.images.rgb_gripper"),
           "taco_world", "pos_euler_7d"),
@@ -450,7 +461,14 @@ def _depth_sequence(
         missing = [int(frame) for frame in frame_indices if int(frame) not in positions]
         if missing:
             raise KeyError(f"Depth sidecar {path} misses frames {missing[:4]}")
-        source_cameras = [str(value) for value in payload["camera_names"].tolist()]
+        try:
+            camera_names = payload["camera_names"]
+        except ValueError as exc:
+            if "Object arrays" not in str(exc):
+                raise
+            with np.load(path, allow_pickle=True) as legacy_payload:
+                camera_names = legacy_payload["camera_names"]
+        source_cameras = [str(value) for value in camera_names.tolist()]
         camera_positions = {_camera_name(name): index for index, name in enumerate(source_cameras)}
         depth_np = np.asarray(payload["depth_meters"], dtype=np.float32)
         intrinsics_np = np.asarray(payload["camera_intrinsics"], dtype=np.float32) if "camera_intrinsics" in payload else None
@@ -724,6 +742,7 @@ class LeRobotSequenceDataset(_StatisticsMixin, Dataset):
         is_eval: bool = False,
         depth_entries: Optional[Mapping[tuple[str, int], Path]] = None,
         max_episodes: Optional[int] = None,
+        filter_root: str | Path | None = None,
     ):
         try:
             from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
@@ -740,6 +759,16 @@ class LeRobotSequenceDataset(_StatisticsMixin, Dataset):
         self.dataset_name = self.action_stats_key = spec.name
         self.depth_entries = dict(depth_entries or {})
         metadata = LeRobotDatasetMetadata(spec.repo_id, root=self.root)
+        filter_root = Path(filter_root).expanduser() if filter_root else self.root
+        nonidle_path = resolve_filter_path(spec.nonidle_ranges_path, filter_root)
+        self.nonidle_ranges = load_nonidle_ranges(nonidle_path)
+        if spec.require_nonidle_range and self.nonidle_ranges is None:
+            raise FileNotFoundError(
+                f"{spec.name} requires non-idle ranges at {nonidle_path}. "
+                "Run scripts/pretraining/compute_droid_nonidle_ranges.py first."
+            )
+        blacklist_path = resolve_filter_path(spec.blacklist_episodes_path, filter_root)
+        self.blacklist_episodes = load_episode_blacklist(blacklist_path)
         self.fps = float(metadata.fps)
         camera_keys = _select_cameras(metadata.camera_keys, spec.cameras, n_views)
         self.camera_keys = camera_keys
@@ -757,20 +786,41 @@ class LeRobotSequenceDataset(_StatisticsMixin, Dataset):
         episodes = list(range(int(metadata.total_episodes)))
         n_eval = max(1, int(len(episodes) * eval_ratio)) if eval_ratio > 0 else 0
         episodes = episodes[-n_eval:] if is_eval and n_eval else (episodes[:-n_eval] if n_eval else episodes)
-        if max_episodes is not None:
-            episodes = episodes[: max(0, int(max_episodes))]
+        selected_episodes: list[int] = []
+        missing_local = 0
         for episode_index in episodes:
+            if episode_index in self.blacklist_episodes:
+                continue
             episode = metadata.episodes[episode_index]
-            first = int(episode["dataset_from_index"])
-            last = int(episode["dataset_to_index"])
-            max_start = last - action_steps - 1
-            if max_start >= first:
-                self.samples.append((episode_index, first, max_start))
+            data_path = self.root / metadata.get_data_file_path(episode_index)
+            video_paths = [self.root / metadata.get_video_file_path(episode_index, key) for key in camera_keys]
+            if not data_path.exists() or any(not path.exists() for path in video_paths):
+                missing_local += 1
+                continue
+            episode_start = int(episode["dataset_from_index"])
+            episode_end = int(episode["dataset_to_index"])
+            ranges = self.nonidle_ranges.get(episode_index, []) if self.nonidle_ranges else [(0, episode_end - episode_start)]
+            if spec.require_nonidle_range and not ranges:
+                continue
+            added = False
+            for range_start, range_end in ranges:
+                first = episode_start + max(0, int(range_start))
+                last = min(episode_end, episode_start + int(range_end))
+                max_start = last - action_steps - 1
+                if max_start >= first:
+                    self.samples.append((episode_index, first, max_start))
+                    added = True
+            if added:
+                selected_episodes.append(episode_index)
+                if max_episodes is not None and len(selected_episodes) >= max(0, int(max_episodes)):
+                    break
         if not self.samples:
             raise FileNotFoundError(f"No usable episodes in {self.root} for {spec.name}")
+        if missing_local:
+            print(f"  [{spec.name}] local-file filter: skipped {missing_local} episodes")
         self.dataset = LeRobotDataset(
-            spec.repo_id, root=self.root, episodes=episodes,
-            delta_timestamps=delta_timestamps, download_videos=True,
+            spec.repo_id, root=self.root, episodes=selected_episodes,
+            delta_timestamps=delta_timestamps, download_videos=False,
             video_backend="pyav", tolerance_s=0.04,
         )
         self.absolute_to_relative = getattr(self.dataset, "_absolute_to_relative_idx", None)
@@ -871,6 +921,30 @@ class DatasetMixture(_StatisticsMixin, Dataset):
         sample["mixture_source"] = self.names[source_index]
         return sample
 
+    def _leaf_datasets(self) -> list[Dataset]:
+        leaves: list[Dataset] = []
+        for dataset in self.source_list:
+            if isinstance(dataset, DatasetMixture):
+                leaves.extend(dataset._leaf_datasets())
+            else:
+                leaves.append(dataset)
+        return leaves
+
+    def _statistics(self, field: str, max_samples: Optional[int]) -> dict[str, dict[str, np.ndarray]]:
+        leaves = self._leaf_datasets()
+        if not leaves:
+            raise ValueError("Cannot compute statistics from an empty mixture.")
+        per_leaf = -1 if max_samples is None or max_samples < 0 else max(1, math.ceil(max_samples / len(leaves)))
+        method_name = "compute_action_statistics" if field == "actions" else "compute_proprio_statistics"
+        result: dict[str, dict[str, np.ndarray]] = {}
+        for dataset in leaves:
+            method = getattr(dataset, method_name)
+            for key, value in method(max_samples=per_leaf).items():
+                if key in result:
+                    raise ValueError(f"Duplicate {field} statistics key in mixture: {key}")
+                result[key] = value
+        return result
+
 
 class DatasetConcat(_StatisticsMixin, Dataset):
     def __init__(self, datasets: Sequence[Dataset]):
@@ -885,6 +959,20 @@ class DatasetConcat(_StatisticsMixin, Dataset):
         child = int(np.searchsorted(self.cumulative_sizes, index, side="right"))
         offset = 0 if child == 0 else int(self.cumulative_sizes[child - 1])
         return self.children[child][index - offset]
+
+
+def _select_oxe_specs(names: Optional[Sequence[str]]) -> tuple[OXESpec, ...]:
+    if names is None:
+        return OXE_SPECS
+    requested = {str(name) for name in names}
+    known = {spec.name for spec in OXE_SPECS}
+    unknown = requested.difference(known)
+    if unknown:
+        raise ValueError(f"Unknown Open X-Embodiment datasets: {sorted(unknown)}")
+    selected = tuple(spec for spec in OXE_SPECS if spec.name in requested)
+    if not selected:
+        raise ValueError("openx_datasets must select at least one dataset.")
+    return selected
 
 
 def _robocasa_depth_entries(
@@ -904,12 +992,14 @@ def _robocasa_depth_entries(
 
 def _build_robocasa(
     root: str | Path,
-    depth_index_path: str | Path,
+    depth_index_path: str | Path | None,
     **common: Any,
 ) -> Dataset:
     root = Path(root).expanduser().resolve()
-    depth_entries = _robocasa_depth_entries(depth_index_path, root)
+    depth_entries = _robocasa_depth_entries(depth_index_path, root) if depth_index_path else {}
     repo_roots = sorted({Path(repo) for repo, _ in depth_entries})
+    if not repo_roots:
+        repo_roots = sorted({path.parent.parent for path in root.rglob("meta/info.json")})
     datasets = []
     for repo_root in repo_roots:
         if not (repo_root / "meta" / "info.json").exists():
@@ -946,9 +1036,11 @@ def build_pretraining_dataset(config: Mapping[str, Any], is_eval: bool = False) 
     sources = []
     if "open_x_embodiment" in enabled:
         openx_root = Path(config["openx_root"]).expanduser()
+        openx_specs = _select_oxe_specs(config.get("openx_datasets"))
         oxe_sources = [(spec.name, LeRobotSequenceDataset(
             spec, openx_root / spec.repo_id, max_episodes=max_episodes, **common,
-        ), float(spec.weight)) for spec in OXE_SPECS]
+            filter_root=config.get("openx_filter_root", openx_root),
+        ), float(spec.weight)) for spec in openx_specs]
         oxe = DatasetMixture(oxe_sources, epoch_size=int(config.get("oxe_epoch_size", 784_000)), seed=int(config.get("seed", 42)))
         sources.append(("open_x_embodiment", oxe, PAPER_SOURCE_RATIOS["open_x_embodiment"]))
     if "mimicgen" in enabled:
@@ -959,7 +1051,7 @@ def build_pretraining_dataset(config: Mapping[str, Any], is_eval: bool = False) 
         sources.append(("mimicgen", mimicgen, PAPER_SOURCE_RATIOS["mimicgen"]))
     if "robocasa365" in enabled:
         robocasa = _build_robocasa(
-            config["robocasa_root"], config["robocasa_depth_index_path"],
+            config["robocasa_root"], config.get("robocasa_depth_index_path"),
             max_episodes=max_episodes, **common,
         )
         sources.append(("robocasa365", robocasa, PAPER_SOURCE_RATIOS["robocasa365"]))

@@ -14,7 +14,7 @@ configurable.
 ## Loader
 
 ```bash
-pip install lerobot==0.4.4
+pip install lerobot==0.4.4 jsonlines
 ```
 
 ```yaml
@@ -38,33 +38,33 @@ Set `n_views` to the number of camera views used by the model. Use `all` to keep
 
 ## Datasets
 
-| Source | Dataset key | Download |
-|---|---|---|
-| Open X-Embodiment | `bridge` | [BrunoM42/bridge_orig_lerobot](https://huggingface.co/datasets/BrunoM42/bridge_orig_lerobot) |
-| Open X-Embodiment | `droid` | [lerobot/droid_1.0.1](https://huggingface.co/datasets/lerobot/droid_1.0.1) |
-| Open X-Embodiment | `taco_play` | [lerobot/taco_play](https://huggingface.co/datasets/lerobot/taco_play) |
-| Open X-Embodiment | `utaustin_mutex` | [lerobot/utaustin_mutex](https://huggingface.co/datasets/lerobot/utaustin_mutex) |
-| Open X-Embodiment | `stanford_hydra_dataset` | [lerobot/stanford_hydra_dataset](https://huggingface.co/datasets/lerobot/stanford_hydra_dataset) |
-| Open X-Embodiment | `berkeley_autolab_ur5` | [lerobot/berkeley_autolab_ur5](https://huggingface.co/datasets/lerobot/berkeley_autolab_ur5) |
-| Open X-Embodiment | `austin_sailor_dataset` | [lerobot/austin_sailor_dataset](https://huggingface.co/datasets/lerobot/austin_sailor_dataset) |
-| Open X-Embodiment | `austin_sirius_dataset` | [lerobot/austin_sirius_dataset](https://huggingface.co/datasets/lerobot/austin_sirius_dataset) |
-| Open X-Embodiment | `berkeley_fanuc_manipulation` | [lerobot/berkeley_fanuc_manipulation](https://huggingface.co/datasets/lerobot/berkeley_fanuc_manipulation) |
-| Open X-Embodiment | `jaco_play` | [lerobot/jaco_play](https://huggingface.co/datasets/lerobot/jaco_play) |
-| Open X-Embodiment | `fmb_dataset` | [lerobot/fmb](https://huggingface.co/datasets/lerobot/fmb) |
-| Open X-Embodiment | `kuka` | [lerobot/stanford_kuka_multimodal_dataset](https://huggingface.co/datasets/lerobot/stanford_kuka_multimodal_dataset) |
-| Open X-Embodiment | `fractal20220817_data` | [BrunoM42/fractal20220817_data_lerobot](https://huggingface.co/datasets/BrunoM42/fractal20220817_data_lerobot) |
-| Open X-Embodiment | `berkeley_cable_routing` | [lerobot/berkeley_cable_routing](https://huggingface.co/datasets/lerobot/berkeley_cable_routing) |
-| Open X-Embodiment | `roboturk` | [lerobot/roboturk](https://huggingface.co/datasets/lerobot/roboturk) |
-| Open X-Embodiment | `dlr_edan_shared_control` | [lerobot/dlr_edan_shared_control](https://huggingface.co/datasets/lerobot/dlr_edan_shared_control) |
-| Open X-Embodiment | `austin_buds_dataset` | [lerobot/austin_buds_dataset](https://huggingface.co/datasets/lerobot/austin_buds_dataset) |
-| Open X-Embodiment | `nyu_franka_play_dataset` | [lerobot/nyu_franka_play_dataset](https://huggingface.co/datasets/lerobot/nyu_franka_play_dataset) |
-| Open X-Embodiment | `nyu_door_opening_surprising_effectiveness` | [lerobot/nyu_door_opening_surprising_effectiveness](https://huggingface.co/datasets/lerobot/nyu_door_opening_surprising_effectiveness) |
-| Open X-Embodiment | `cmu_stretch` | [lerobot/cmu_stretch](https://huggingface.co/datasets/lerobot/cmu_stretch) |
-| Open X-Embodiment | `furniture_bench_dataset` | [tailong-wu/furniture_bench_dataset_lerobot_v30](https://huggingface.co/datasets/tailong-wu/furniture_bench_dataset_lerobot_v30) |
-| Open X-Embodiment | `bc_z` | [tailong-wu/bc_z_lerobot_v30](https://huggingface.co/datasets/tailong-wu/bc_z_lerobot_v30) |
-| Open X-Embodiment | `language_table` | [tailong-wu/language_table_lerobot_v30](https://huggingface.co/datasets/tailong-wu/language_table_lerobot_v30) |
-| MimicGen | `core` | [amandlek/mimicgen_datasets](https://huggingface.co/datasets/amandlek/mimicgen_datasets) |
-| RoboCasa365 | `pretrain / human / atomic + composite` | [robocasa/robocasa](https://github.com/robocasa/robocasa) |
+| Source | Dataset key | Action conversion | Download |
+|---|---|---|---|
+| Open X-Embodiment | `bridge` | Reached Euler residual -> relative rotvec; open -> close | [BrunoM42/bridge_orig_lerobot](https://huggingface.co/datasets/BrunoM42/bridge_orig_lerobot) |
+| Open X-Embodiment | `droid` | Target-current pose; `R_target R_current^T` -> rotvec; gripper retained | [lerobot/droid_1.0.1](https://huggingface.co/datasets/lerobot/droid_1.0.1) |
+| Open X-Embodiment | `taco_play` | Position `/ 50`; Euler `/ 20` -> rotvec; open -> close | [lerobot/taco_play](https://huggingface.co/datasets/lerobot/taco_play) |
+| Open X-Embodiment | `utaustin_mutex` | Stored delta; open -> close | [lerobot/utaustin_mutex](https://huggingface.co/datasets/lerobot/utaustin_mutex) |
+| Open X-Embodiment | `stanford_hydra_dataset` | Euler XYZ delta -> rotvec; open -> close | [lerobot/stanford_hydra_dataset](https://huggingface.co/datasets/lerobot/stanford_hydra_dataset) |
+| Open X-Embodiment | `berkeley_autolab_ur5` | Base RPY delta -> rotvec; open -> close | [lerobot/berkeley_autolab_ur5](https://huggingface.co/datasets/lerobot/berkeley_autolab_ur5) |
+| Open X-Embodiment | `austin_sailor_dataset` | Stored xyz/yaw delta; open -> close; roll/pitch masked | [lerobot/austin_sailor_dataset](https://huggingface.co/datasets/lerobot/austin_sailor_dataset) |
+| Open X-Embodiment | `austin_sirius_dataset` | Stored xyz/yaw delta; open -> close; roll/pitch masked | [lerobot/austin_sirius_dataset](https://huggingface.co/datasets/lerobot/austin_sirius_dataset) |
+| Open X-Embodiment | `berkeley_fanuc_manipulation` | Euler XYZ delta -> rotvec; gripper masked | [lerobot/berkeley_fanuc_manipulation](https://huggingface.co/datasets/lerobot/berkeley_fanuc_manipulation) |
+| Open X-Embodiment | `jaco_play` | Stored xyz delta; rotation masked; open -> close | [lerobot/jaco_play](https://huggingface.co/datasets/lerobot/jaco_play) |
+| Open X-Embodiment | `fmb_dataset` | Base RPY delta -> rotvec; close retained | [lerobot/fmb](https://huggingface.co/datasets/lerobot/fmb) |
+| Open X-Embodiment | `kuka` | Stored xyz delta; rotation and gripper masked | [lerobot/stanford_kuka_multimodal_dataset](https://huggingface.co/datasets/lerobot/stanford_kuka_multimodal_dataset) |
+| Open X-Embodiment | `fractal20220817_data` | Base RPY delta -> rotvec; open -> close | [BrunoM42/fractal20220817_data_lerobot](https://huggingface.co/datasets/BrunoM42/fractal20220817_data_lerobot) |
+| Open X-Embodiment | `berkeley_cable_routing` | Cartesian velocity `/ fps`; roll, pitch, gripper masked | [lerobot/berkeley_cable_routing](https://huggingface.co/datasets/lerobot/berkeley_cable_routing) |
+| Open X-Embodiment | `roboturk` | Stored delta; open -> close | [lerobot/roboturk](https://huggingface.co/datasets/lerobot/roboturk) |
+| Open X-Embodiment | `dlr_edan_shared_control` | Euler ZXY delta -> rotvec; open -> close | [lerobot/dlr_edan_shared_control](https://huggingface.co/datasets/lerobot/dlr_edan_shared_control) |
+| Open X-Embodiment | `austin_buds_dataset` | Stored xyz; signed gripper `[-1, 1]` -> `[0, 1]`; rotation masked | [lerobot/austin_buds_dataset](https://huggingface.co/datasets/lerobot/austin_buds_dataset) |
+| Open X-Embodiment | `nyu_franka_play_dataset` | Slice raw EEF xyz/RPY; RPY -> rotvec; open -> close | [lerobot/nyu_franka_play_dataset](https://huggingface.co/datasets/lerobot/nyu_franka_play_dataset) |
+| Open X-Embodiment | `nyu_door_opening_surprising_effectiveness` | Cartesian velocity `/ fps`; open -> close | [lerobot/nyu_door_opening_surprising_effectiveness](https://huggingface.co/datasets/lerobot/nyu_door_opening_surprising_effectiveness) |
+| Open X-Embodiment | `cmu_stretch` | Drop final slot; supervise x/z only | [lerobot/cmu_stretch](https://huggingface.co/datasets/lerobot/cmu_stretch) |
+| Open X-Embodiment | `furniture_bench_dataset` | Base xyz; body-local RPY -> base rotvec; open -> close | [tailong-wu/furniture_bench_dataset_lerobot_v30](https://huggingface.co/datasets/tailong-wu/furniture_bench_dataset_lerobot_v30) |
+| Open X-Embodiment | `bc_z` | Axis-angle residual plus state -> relative rotvec; open -> close | [tailong-wu/bc_z_lerobot_v30](https://huggingface.co/datasets/tailong-wu/bc_z_lerobot_v30) |
+| Open X-Embodiment | `language_table` | Keep xy only; other dimensions masked | [tailong-wu/language_table_lerobot_v30](https://huggingface.co/datasets/tailong-wu/language_table_lerobot_v30) |
+| MimicGen | `core` | OSC position x `0.05`; rotation x `0.5`; signed gripper -> close | [amandlek/mimicgen_datasets](https://huggingface.co/datasets/amandlek/mimicgen_datasets) |
+| RoboCasa365 | `pretrain / human / atomic + composite` | Select 6D arm delta; signed gripper -> close | [robocasa/robocasa](https://github.com/robocasa/robocasa) |
 
 ## Paths
 
@@ -81,6 +81,9 @@ mkdir -p "$DATA_ROOT"
 ```bash
 python "$GAM_ROOT/scripts/pretraining/download_openx.py" \
   --output-root "$DATA_ROOT/openx_lerobot"
+
+python "$GAM_ROOT/scripts/pretraining/compute_droid_nonidle_ranges.py" \
+  --openx-root "$DATA_ROOT/openx_lerobot"
 ```
 
 ### MimicGen
@@ -99,7 +102,7 @@ python "$GAM_ROOT/scripts/pretraining/download_robocasa.py" \
   --output-root "$DATA_ROOT/robocasa"
 ```
 
-The dataset root is `$DATA_ROOT/robocasa/v1.0`.
+The downloader converts LeRobot v2.1 data to v3 and keeps replay states in `extras`.
 
 ## Depth
 
@@ -139,11 +142,8 @@ no-op filtering.
 [delta_position(3), delta_rotation_axis_angle(3), gripper_close(1)]
 ```
 
-| Source | Conversion |
-|---|---|
-| Open X-Embodiment | Source-specific frame, rotation, gripper, and valid-dimension conversion |
-| MimicGen | OSC position x `0.05`; rotation x `0.5`; `-1=open, +1=close` to `0=open, 1=close` |
-| RoboCasa365 | Drop base/control slots; keep 6D arm delta; `-1=open, +1=close` to `0=open, 1=close` |
+Each row is converted before q01/q99 normalization. Masked dimensions are not
+included in the action loss.
 
 ```bash
 python "$GAM_ROOT/scripts/pretraining/compute_action_stats.py" \
@@ -164,3 +164,11 @@ a_norm = 2 * (a - q01) / (q99 - q01 + eps) - 1
 `stats_dir` is empty.
 
 Upstream licenses and citation requirements apply.
+
+## Samples
+
+```bash
+python "$GAM_ROOT/scripts/pretraining/visualize_pretraining_samples.py" \
+  --config /path/to/training.yaml \
+  --output-root "$DATA_ROOT/pretraining_samples"
+```
