@@ -17,7 +17,7 @@
 
 <sup>*</sup> Equal contribution. &nbsp; <sup>†</sup> Co-corresponding authors.
 
-### Accepted to [3DWM @ ECCV 2026](https://eccv2026-3d-world-models.github.io/)
+Accepted to [3DWM @ ECCV 2026](https://eccv2026-3d-world-models.github.io/)
 
 ### [Paper](https://arxiv.org/abs/2606.17046) | [Project Page](https://cvlab-kaist.github.io/Geometric-Action-Model/) | [Checkpoints](https://huggingface.co/SeonghuJeon/3da-libero-gam) | [BibTeX](#citation)
 
