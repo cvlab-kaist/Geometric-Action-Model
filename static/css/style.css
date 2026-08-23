@@ -335,6 +335,10 @@ h3 {
   background: var(--blue-bright);
   box-shadow: 0 0 0 3px rgba(26, 115, 232, .18);
 }
+.hero-badge:hover {
+  text-decoration: none;
+  border-color: var(--blue);
+}
 
 .hero h1 {
   font-family: var(--font-display);
