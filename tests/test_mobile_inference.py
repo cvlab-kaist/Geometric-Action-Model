@@ -93,6 +93,7 @@ class ContractTests(unittest.TestCase):
     def test_whitelist_and_incompatible_checkpoints(self):
         cfg=training_config();out=release_config(cfg,7000)
         self.assertNotIn('private',json.dumps(out));self.assertEqual(out['predictor']['proprio_dim'],16)
+        self.assertEqual(out['backbone']['action_steps_per_token'],16)
         for section,key,value in [('predictor','shared_padded_proprio',False),
             ('predictor','single_arm_proprio_dim',7),('dataset','action_frame','base'),
             ('predictor','deep_temporal_causal_mask',False),('action_head','chunk_size',8)]:

@@ -155,7 +155,9 @@ current training configuration passes the release schema, while twelve deliberat
 incompatible configuration variants are rejected. The whitelist check found no
 training paths or run metadata in the exported configuration.
 
-Ten numerical/contract/pipeline unit tests are provided but have not yet run in
-the compute environment. Real checkpoint H1/H4 inference and comparison with the
-training implementation are also pending. This is a development branch, not a
-verified robot deployment release.
+Ten numerical/contract/pipeline unit tests passed in the compute environment.
+The first real checkpoint check identified an omitted backbone
+`action_steps_per_token=16` export setting; the export now preserves that trained
+projection shape. Real checkpoint H1/H4 inference and comparison with the
+training implementation are being rechecked. This is a development branch, not
+a verified robot deployment release.

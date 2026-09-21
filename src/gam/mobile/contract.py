@@ -57,6 +57,7 @@ def release_config(config: dict, step: int) -> dict:
         "text_model": "google-t5/t5-base", "text_length": int(pred["language_len"]),
         "backbone": {"model_name": "da3-giant", "encoder_input_size": 224,
                      "n_action_steps": 5, "views_per_timestep": 3,
+                     "action_steps_per_token": 16,
                      "use_temporal_embed": False,
                      "action_only_frame_attn": bool(ft.get("action_only_frame_attn", False))},
         "predictor": {**{k: pred[k] for k in predictor_keys}, "type": "gam",
@@ -88,6 +89,7 @@ def validate_config(config):
         (config.get("backbone", {}), {
             "model_name": "da3-giant", "encoder_input_size": 224,
             "n_action_steps": 5, "views_per_timestep": 3,
+            "action_steps_per_token": 16,
             "use_temporal_embed": False,
         }),
         (config.get("predictor", {}), {
