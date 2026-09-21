@@ -116,6 +116,34 @@ class ContractTests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_deep_attention_matches_qk_and_value_dtypes(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from robot.modeling import da3_giant_encoder as encoder
+
+        # Reproduce eager QK normalization promoting bf16 inputs to fp32.
+        identity = torch.nn.Identity()
+        attention = SimpleNamespace(
+            qkv=lambda x: torch.cat([x, x, x], dim=-1), num_heads=1,
+            q_norm=lambda x: x.float(), k_norm=lambda x: x.float(),
+            rope=None, proj=identity, proj_drop=identity,
+        )
+        block = SimpleNamespace(norm1=identity, attn=attention, ls1=identity,
+                                norm2=identity, mlp=identity, ls2=identity)
+
+        def check_attention(q, k, v, *, block_mask):
+            self.assertEqual(q.dtype, torch.bfloat16)
+            self.assertEqual(k.dtype, v.dtype)
+            return v
+
+        x = torch.ones(1, 2, 3, 4, dtype=torch.bfloat16)
+        with patch.object(encoder, '_HAS_FLEX_ATTENTION', True), \
+                patch.object(encoder, '_flex_attention', check_attention):
+            out = encoder.DA3GiantEncoder._run_deep_global_block_flex(
+                None, x, block, None, None)
+        self.assertEqual(out.shape, x.shape)
+        self.assertTrue(torch.isfinite(out).all())
+
     def fake_policy(self):
         p=MobileGAMPolicy();p.device=torch.device('cpu');p.config={'text_length':77}
         p.action_normalizer=p.state_normalizer=Normalizer(stats())

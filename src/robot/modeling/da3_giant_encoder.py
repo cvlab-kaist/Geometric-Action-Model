@@ -1326,6 +1326,10 @@ class DA3GiantEncoder(nn.Module):
         if attn.rope is not None and pos_flat is not None:
             q = attn.rope(q, pos_flat)
             k = attn.rope(k, pos_flat)
+        # Q/K normalization can promote to float32 in eager evaluation.
+        # Preserve normalization/RoPE precision, then match the projected V dtype.
+        q = q.to(dtype=v.dtype)
+        k = k.to(dtype=v.dtype)
         # flex_attention expects (B, H, L, D) : same as SDPA. Bool BlockMask
         # broadcasts across B and H.
         out = _flex_attention(q, k, v, block_mask=block_mask)

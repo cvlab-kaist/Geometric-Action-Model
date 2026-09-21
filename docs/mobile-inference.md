@@ -159,5 +159,8 @@ Ten numerical/contract/pipeline unit tests passed in the compute environment.
 The first real checkpoint check identified an omitted backbone
 `action_steps_per_token=16` export setting; the export now preserves that trained
 projection shape. Real checkpoint H1/H4 inference and comparison with the
-training implementation are being rechecked. This is a development branch, not
-a verified robot deployment release.
+training implementation are being rechecked. H1 inference passed; H4 exposed a
+Q/K versus V dtype mismatch in the public deep causal-attention path. The training
+implementation's post-normalization/RoPE dtype correction is now ported, with an
+additional regression test. This is a development branch, not a verified robot
+deployment release.
