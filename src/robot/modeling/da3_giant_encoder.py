@@ -55,7 +55,7 @@ def _make_deep_block_causal_mask_mod(token_count: int, v_count: int):
     return mask_mod
 
 
-_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 _DA3_SRC_DIR = os.path.join(_ROOT_DIR, "Depth-Anything-3", "src")
 if os.path.isdir(_DA3_SRC_DIR) and _DA3_SRC_DIR not in sys.path:
     sys.path.insert(0, _DA3_SRC_DIR)
@@ -219,9 +219,11 @@ class DA3GiantEncoder(nn.Module):
         use_temporal_embed: bool = False,
         action_input_rate: float = 0.4,
         action_only_frame_attn: bool = False,
+        initialize_from_checkpoint: bool = True,
     ):
         super().__init__()
 
+        self.initialize_from_checkpoint = bool(initialize_from_checkpoint)
         self.model_name = str(model_name or "da3-giant")
         self.patch_size = self.PATCH_SIZE
         self.encoder_input_size = encoder_input_size
@@ -341,6 +343,9 @@ class DA3GiantEncoder(nn.Module):
         from depth_anything_3.api import DepthAnything3
 
         model = DepthAnything3(model_name=model_name)
+        if not self.initialize_from_checkpoint:
+            # The mobile loader immediately restores a complete strict student state.
+            return model
         state_path = ckpt_path
         if os.path.isdir(state_path):
             candidates = (

@@ -163,6 +163,14 @@ The pretrained initialization checkpoint is available at
 `pretrained/pretrained-gam.pt`. To use it for training, set
 `stage_1.ckpt_path` to the downloaded path.
 
+## Mobile Bimanual Inference (Development Branch)
+
+Inference code for the shared 16D AgiBot/OXE checkpoint family is available in
+[`docs/mobile-inference.md`](docs/mobile-inference.md): portable checkpoint export,
+H1–4/C16 inference, source-specific normalization and fixed-anchor EEF recovery.
+Mobile weights are separate from the existing LIBERO checkpoints and are not
+published by this branch. See the verification status in that guide.
+
 ## Evaluation
 
 Install LIBERO-Plus assets before the first rollout:
