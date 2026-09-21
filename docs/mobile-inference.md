@@ -150,17 +150,28 @@ robot validation results distinct.
 
 ## Verification status
 
-Static checks passed for the Python sources and both CLI help entrypoints. The
-current training configuration passes the release schema, while twelve deliberately
-incompatible configuration variants are rejected. The whitelist check found no
-training paths or run metadata in the exported configuration.
+Verified on 2026-09-21 with a GH200 and PyTorch `2.8.0a0+5228986c39.nv25.06`,
+using the shared 16D continuation checkpoint at step 7,000. Tested inference code:
+`bdfea8f`. The DA3 and T5 source revisions are pinned by setup and bundle metadata.
 
-Ten numerical/contract/pipeline unit tests passed in the compute environment.
-The first real checkpoint check identified an omitted backbone
-`action_steps_per_token=16` export setting; the export now preserves that trained
-projection shape. Real checkpoint H1/H4 inference and comparison with the
-training implementation are being rechecked. H1 inference passed; H4 exposed a
-Q/K versus V dtype mismatch in the public deep causal-attention path. The training
-implementation's post-normalization/RoPE dtype correction is now ported, with an
-additional regression test. This is a development branch, not a verified robot
-deployment release.
+- Eleven numerical, contract and pipeline tests passed, including fixed rotated
+  anchors, rotations near pi, source padding, normalization/masking, bundle
+  integrity and eager deep-attention dtype handling.
+- The actual checkpoint exported and loaded all three components with strict
+  parameter names and shapes. Export includes `action_steps_per_token=16`, which
+  is required even though inference does not consume the legacy action input.
+- Each case below returned finite `(16,16)` actions. Replacing the public encoder
+  and predictor with the training implementations using identical weights gave
+  identical normalized actions in these tests.
+
+| Input | Observed history | Cameras | Maximum absolute normalized-action difference |
+|---|---:|---:|---:|
+| AgiBot | 1 | 3 | 0 |
+| AgiBot | 4 | 3 | 0 |
+| OXE Austin Sailor | 4 | 2 valid, third masked | 0 |
+
+The comparison uses synthetic RGB/state inputs and the same frozen T5 features.
+It establishes checkpoint loading and component-forward compatibility, not robot
+control performance, downstream success rates, or complete training-step parity.
+No hardware control or model-weight upload was performed. Keep code readiness,
+weight-release status and robot validation results separate.
